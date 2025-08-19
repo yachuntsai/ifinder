@@ -1,1 +1,26 @@
-data/
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Test/type-check caches
+.pytest_cache/
+.mypy_cache/
+
+# Local env vars
+.env
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Project data (mounted by Docker; not source-controlled)
+**/data
+!data/.gitkeep
+!data/dataset/.gitkeep

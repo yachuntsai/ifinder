@@ -5,9 +5,26 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
+# --- Make your app importable ---
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))  # repo root
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
+
+import app.db.models  # ensure models are imported so autogenerate sees them
+
+# --- Import your SQLAlchemy Base + models ---
+from app.db.base import Base  # contains Base = declarative_base()
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Prefer env var for DB URL (alembic.ini can stay blank)
+DATABASE_URL = os.getenv(
+    "DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/postgres"
+)
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
+
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -18,7 +35,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

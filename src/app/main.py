@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.core.database import Base, engine
 from app.routers import feedback, image
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 
 # Optional: warm up CLIP on startup (so first request is fast)
@@ -32,6 +33,12 @@ def create_app() -> FastAPI:
     # Routers
     app.include_router(image.router)
     app.include_router(feedback.router)
+
+    app.mount(
+        f"/static/image",
+        StaticFiles(directory=str(image.IMAGES_DIR)),
+        name="image",
+    )
 
     # Simple health check
     @app.get("/healthz")

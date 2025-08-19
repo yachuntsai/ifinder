@@ -13,7 +13,8 @@ from app.schemas.image import (
     SearchResponse,
 )
 from fastapi import APIRouter, Depends, Form, HTTPException
-from fastapi.staticfiles import StaticFiles
+from pgvector.sqlalchemy import Vector  # only if you need the type here
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 IMAGE_ENDPOINT_PREFIX = "/images"
@@ -22,11 +23,10 @@ router = APIRouter(prefix=IMAGE_ENDPOINT_PREFIX, tags=["image"])
 DATA_DIR = settings.data_dir
 IMAGES_DIR = Path(settings.images_dir)
 IMAGES_DIR.mkdir(parents=True, exist_ok=True)
-RAW_IMAGE_ENDPOINT = "/raw"
-router.mount(RAW_IMAGE_ENDPOINT, StaticFiles(directory=str(IMAGES_DIR)), name="raw")
+RAW_IMAGE_ENDPOINT = "/static/image"
 
 
-@router.post("/ingestions")
+@router.post("/ingestions", response_model=List[ImageResponse])
 def index_from_folder(folder: str = Form(...), db: Session = Depends(get_db)):
     folder_path = Path(folder)
     if not folder_path.exists():
@@ -66,7 +66,7 @@ def index_from_folder(folder: str = Form(...), db: Session = Depends(get_db)):
     results = []
     for path, emb in zip(dest_paths, embeddings):
         filename = path.name
-        url_path = f"{IMAGE_ENDPOINT_PREFIX}{RAW_IMAGE_ENDPOINT}/{filename}"
+        url_path = f"http://localhost:8000{RAW_IMAGE_ENDPOINT}/{filename}"
         results.append(Image(filename=filename, url_path=url_path, embedding=emb))
         db.add_all(results)
         db.flush()  # <-- allocate primary keys for all rows
@@ -86,28 +86,35 @@ def get_images_summary(db: Session = Depends(get_db)):
 
 @router.get("/search", response_model=SearchResponse)
 def search(query: str, top_k: int = 1, db: Session = Depends(get_db)):
-    items = db.query(Image).filter(Image.embedding.isnot(None)).all()
-    if not items:
+    # 1) embed the query (same as before)
+    text_vec = clip.embed_text(clip.get_model_context(), query)
+    qvec = text_vec.tolist()  # pgvector handles Python lists/ndarrays
+
+    # 2) build a query that orders by cosine distance ASC (smaller = closer)
+    #    and also compute a "score" = 1 - distance to match cosine similarity
+    stmt = (
+        select(Image, (1 - Image.embedding.cosine_distance(qvec)).label("score"))
+        .where(Image.embedding.isnot(None))
+        .order_by(Image.embedding.cosine_distance(qvec))  # nearest first
+        .limit(max(1, top_k))
+    )
+
+    rows = db.execute(stmt).all()  # list of (Image, score)
+    if not rows:
         raise HTTPException(
             status_code=400,
             detail="No images indexed. Use /index_from_folder or /index_from_zip first.",
         )
-    text_vec = clip.embed_text(clip.get_model_context(), query)
-    mat = np.array([it.embedding for it in items], dtype=np.float32)
-    scores = mat @ text_vec.astype(np.float32)
-    top_k = max(1, min(top_k, len(items)))
-    idxs = np.argsort(-scores)[:top_k]
-    results = []
-    for i in idxs:
-        it = items[int(i)]
-        results.append(
-            ImageMatchingResponse(
-                id=it.id,
-                filename=it.filename,
-                url=it.url_path,
-                score=float(scores[int(i)]),
-            )
+
+    results = [
+        ImageMatchingResponse(
+            id=img.id,
+            filename=img.filename,
+            url=img.url_path,
+            score=float(score),
         )
+        for (img, score) in rows
+    ]
     return SearchResponse(query=query, results=results)
 
 

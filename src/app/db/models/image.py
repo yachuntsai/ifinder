@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from app.core.database import Base
+from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     Boolean,
     Column,
@@ -22,7 +23,8 @@ class Image(Base):
     url_path = Column(
         String, nullable=False
     )  # served by StaticFiles at /images/<filename>
-    embedding = Column(JSONB, nullable=True)  # store vector as JSON array
+    embedding = Column(Vector(512))  # CLIP ViT-B/32
+
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
     feedback = relationship(

@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ifinder"
+version = "0.1.0"
+description = "ifinder"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2",
+    "sqlalchemy>=2.0.29",
+    "alembic>=1.13",
+    "psycopg2-binary>=2.9",
+    "transformers>=4.42.0",
+    "torch>=2.2.0",
+    "Pillow>=10.3.0",
+    "python-multipart>=0.0.9"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]

@@ -1,5 +1,6 @@
+"""Tests for CLIP embedding helpers."""
+
 import unittest
-from dataclasses import dataclass
 
 import numpy as np
 from app.ml import clip
@@ -8,18 +9,15 @@ TEST_ASSETS_PATH = "./tests/assets/ml/clip"
 
 
 class TestClip(unittest.TestCase):
+    """Unit tests for CLIP image/text embedding functions."""
 
     def __init__(self, methodName="runTest"):
         self.model_ctx = clip.create_context()
         super().__init__(methodName)
 
-    def setUp(self) -> None:
-        return super().setUp()
-
-    def tearDown(self) -> None:
-        return super().tearDown()
-
     def test_embeds(self):
+        """Test embedding images and text with CLIP."""
+
         cat_idx = 0
         elephant_idx = 1
         cat_path = f"{TEST_ASSETS_PATH}/cat.jpg"
@@ -36,7 +34,7 @@ class TestClip(unittest.TestCase):
         self.assertEqual(cat_text_embedding.shape, (512,))
 
         text_vec = cat_text_embedding
-        mat = np.array([embedding for embedding in embeddings], dtype=np.float32)
+        mat = np.array(list(embeddings), dtype=np.float32)
         scores = mat @ text_vec.astype(np.float32)
         self.assertGreater(scores[cat_idx], scores[elephant_idx])
 
@@ -45,6 +43,6 @@ class TestClip(unittest.TestCase):
         self.assertEqual(elephant_text_embedding.shape, (512,))
 
         text_vec = elephant_text_embedding
-        mat = np.array([embedding for embedding in embeddings], dtype=np.float32)
+        mat = np.array(list(embeddings), dtype=np.float32)
         scores = mat @ text_vec.astype(np.float32)
         self.assertGreater(scores[elephant_idx], scores[cat_idx])

@@ -1,9 +1,11 @@
+"""Router for image-related endpoints in the iFinder application."""
+
 from pathlib import Path
 from typing import List
 
 import numpy as np
 from app.core.config import settings
-from app.core.database import get_db
+from app.db.base import get_db
 from app.db.models.image import Image
 from app.ml import clip
 from app.schemas.image import (
@@ -13,8 +15,7 @@ from app.schemas.image import (
     SearchResponse,
 )
 from fastapi import APIRouter, Depends, Form, HTTPException
-from pgvector.sqlalchemy import Vector  # only if you need the type here
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 IMAGE_ENDPOINT_PREFIX = "/images"
@@ -27,7 +28,8 @@ RAW_IMAGE_ENDPOINT = "/static/image"
 
 
 @router.post("/ingestions", response_model=List[ImageResponse])
-def index_from_folder(folder: str = Form(...), db: Session = Depends(get_db)):
+def ingest_from_folder(folder: str = Form(...), db: Session = Depends(get_db)):
+    """Ingest images from a specified folder into the database."""
     folder_path = Path(folder)
     if not folder_path.exists():
         raise HTTPException(status_code=400, detail=f"Folder not found: {folder}")
@@ -80,12 +82,14 @@ def index_from_folder(folder: str = Form(...), db: Session = Depends(get_db)):
 
 @router.get("/summary", response_model=ImagesSummaryResponse)
 def get_images_summary(db: Session = Depends(get_db)):
+    """Get a summary of all indexed images."""
     total_images = db.query(Image).count()
     return ImagesSummaryResponse(total=total_images)
 
 
 @router.get("/search", response_model=SearchResponse)
 def search(query: str, top_k: int = 1, db: Session = Depends(get_db)):
+    """Search for images matching a text query using CLIP embeddings."""
     # 1) embed the query (same as before)
     text_vec = clip.embed_text(clip.get_model_context(), query)
     qvec = text_vec.tolist()  # pgvector handles Python lists/ndarrays
@@ -120,6 +124,7 @@ def search(query: str, top_k: int = 1, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[ImageResponse])
 def get_images(db: Session = Depends(get_db)):
+    """Get a list of all indexed images."""
     items = db.query(Image).all()
     return [
         ImageResponse(id=item.id, filename=item.filename, url=item.url_path)

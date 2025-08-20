@@ -1,21 +1,15 @@
+"""Feedback Model"""
+
 from datetime import datetime, timezone
 
-from app.core.database import Base
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    Float,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-)
-from sqlalchemy.dialects.postgresql import JSONB
+from app.db.base import Base
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, Text
 from sqlalchemy.orm import relationship
 
 
 class Feedback(Base):
+    """Feedback model for storing user feedback on images."""
+
     __tablename__ = "feedback"
     id = Column(Integer, primary_key=True, index=True)
     query_text = Column(Text, nullable=False)

@@ -1,7 +1,9 @@
+"""Main application entry point for the FastAPI server."""
+
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
-from app.core.database import Base, engine
+from app.db.base import Base, engine
 from app.routers import feedback, image
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -9,7 +11,8 @@ from fastapi.staticfiles import StaticFiles
 
 # Optional: warm up CLIP on startup (so first request is fast)
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
+    """Application lifespan event to initialize resources."""
     try:
         # Lazy import to avoid import cost when not starting the server
         from app.ml import clip
@@ -22,6 +25,7 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
     app = FastAPI(
         title=settings.app_name,
         debug=settings.debug,
@@ -35,7 +39,7 @@ def create_app() -> FastAPI:
     app.include_router(feedback.router)
 
     app.mount(
-        f"/static/image",
+        image.RAW_IMAGE_ENDPOINT,
         StaticFiles(directory=str(image.IMAGES_DIR)),
         name="image",
     )

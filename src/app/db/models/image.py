@@ -1,28 +1,20 @@
+"""Image Model"""
+
 from datetime import datetime, timezone
 
-from app.core.database import Base
+from app.db.base import Base
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    Float,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-)
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import Column, DateTime, Integer, String
 from sqlalchemy.orm import relationship
 
 
 class Image(Base):
+    """Image model for storing image metadata and embeddings."""
+
     __tablename__ = "images"
     id = Column(Integer, primary_key=True, index=True)
     filename = Column(String, unique=True, index=True, nullable=False)
-    url_path = Column(
-        String, nullable=False
-    )  # served by StaticFiles at /images/<filename>
+    url_path = Column(String, nullable=False)
     embedding = Column(Vector(512))  # CLIP ViT-B/32
 
     created_at = Column(DateTime, default=datetime.now(timezone.utc))

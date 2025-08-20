@@ -1,8 +1,14 @@
+"""Configuration settings for the Ifinder API application.
+This module uses Pydantic to define and validate application settings.
+"""
+
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    """Application settings for Ifinder API."""
+
     # --- App basics ---
     app_name: str = "Ifinder API"
     debug: bool = True
@@ -21,6 +27,8 @@ class Settings(BaseSettings):
     images_dir: str = Field(default="/data/images", alias="IMAGES_DIR")
 
     class Config:
+        """Configuration for Pydantic settings."""
+
         env_file = ".env"  # auto-load variables from .env
         case_sensitive = False  # allow case-insensitive env vars
 

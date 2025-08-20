@@ -1,14 +1,12 @@
-import os
-from pathlib import Path
+"""Feedback Router for handling image feedback in the iFinder application."""
+
 from typing import List
 
-import numpy as np
-from app.core.database import Base, engine, get_db
+from app.db.base import get_db
 from app.db.models.feedback import Feedback
 from app.db.models.image import Image
 from app.schemas.feedback import FeedbackRequest, FeedbackResponse
-from fastapi import APIRouter, Depends, FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.staticfiles import StaticFiles
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/feedbacks", tags=["feedback"])
@@ -16,6 +14,7 @@ router = APIRouter(prefix="/feedbacks", tags=["feedback"])
 
 @router.post("", response_model=FeedbackResponse)
 def feedback(req: FeedbackRequest, db: Session = Depends(get_db)):
+    """Submit feedback for an image."""
     image = db.query(Image).get(req.image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -39,6 +38,7 @@ def feedback(req: FeedbackRequest, db: Session = Depends(get_db)):
 
 @router.get("", response_model=List[FeedbackResponse])
 def get_feedbacks(image_id: int = None, db: Session = Depends(get_db)):
+    """Get feedbacks for a specific image or all feedbacks."""
     query = db.query(Feedback)
     if image_id:
         query = query.filter(Feedback.image_id == image_id)

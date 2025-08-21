@@ -10,7 +10,7 @@ from sqlalchemy.orm import relationship
 class Feedback(Base):
     """Feedback model for storing user feedback on images."""
 
-    __tablename__ = "feedback"
+    __tablename__ = "feedbacks"
     id = Column(Integer, primary_key=True, index=True)
     query_text = Column(Text, nullable=False)
     image_id = Column(Integer, ForeignKey("images.id"), nullable=False, index=True)
@@ -19,4 +19,4 @@ class Feedback(Base):
     is_good = Column(Boolean, nullable=False)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
-    image = relationship("Image", back_populates="feedback")
+    image = relationship("Image", back_populates="feedbacks")

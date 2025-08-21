@@ -19,6 +19,6 @@ class Image(Base):
 
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
 
-    feedback = relationship(
+    feedbacks = relationship(
         "Feedback", back_populates="image", cascade="all, delete-orphan"
     )

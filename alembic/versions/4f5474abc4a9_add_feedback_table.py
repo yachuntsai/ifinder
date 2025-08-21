@@ -26,7 +26,7 @@ def upgrade():
         pass
 
     op.create_table(
-        "feedback",
+        "feedbacks",
         sa.Column("id", sa.Integer(), primary_key=True),
         sa.Column("query_text", sa.Text(), nullable=False),
         sa.Column(
@@ -45,14 +45,13 @@ def upgrade():
         ),
     )
 
-    # Helpful indexes
-    op.create_index("ix_feedback_image_id", "feedback", ["image_id"])
-    op.create_index("ix_feedback_created_at", "feedback", ["created_at"])
-    op.create_index("ix_feedback_is_good", "feedback", ["is_good"])
+    op.create_index("ix_feedbacks_image_id", "feedbacks", ["image_id"])
+    op.create_index("ix_feedbacks_created_at", "feedbacks", ["created_at"])
+    op.create_index("ix_feedbacks_is_good", "feedbacks", ["is_good"])
 
 
 def downgrade():
-    op.drop_index("ix_feedback_is_good", table_name="feedback")
-    op.drop_index("ix_feedback_created_at", table_name="feedback")
-    op.drop_index("ix_feedback_image_id", table_name="feedback")
-    op.drop_table("feedback")
+    op.drop_index("ix_feedbacks_is_good", table_name="feedbacks")
+    op.drop_index("ix_feedbacks_created_at", table_name="feedbacks")
+    op.drop_index("ix_feedbacks_image_id", table_name="feedbacks")
+    op.drop_table("feedbacks")

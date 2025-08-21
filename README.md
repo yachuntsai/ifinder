@@ -54,7 +54,9 @@ environment:
 **From a folder** (mounted into the container at `/data/dataset`):
 
 ```bash
-curl -X POST -F "folder=/data/dataset" http://localhost:8000/images/ingestions
+curl -X POST http://localhost:8000/images/ingestions \
+     -H "Content-Type: application/json" \
+     -d '{"folder": "/data/dataset"}'
 ```
 
 ### 6. Search for images

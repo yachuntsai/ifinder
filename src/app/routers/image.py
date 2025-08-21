@@ -9,6 +9,7 @@ from app.db.base import get_db
 from app.db.models.image import Image
 from app.ml import clip
 from app.schemas.image import (
+    ImageIngestionRequest,
     ImageMatchingResponse,
     ImageResponse,
     ImagesSummaryResponse,
@@ -28,11 +29,11 @@ RAW_IMAGE_ENDPOINT = "/static/image"
 
 
 @router.post("/ingestions", response_model=List[ImageResponse])
-def ingest_from_folder(folder: str = Form(...), db: Session = Depends(get_db)):
+def ingest_from_folder(req: ImageIngestionRequest, db: Session = Depends(get_db)):
     """Ingest images from a specified folder into the database."""
-    folder_path = Path(folder)
+    folder_path = Path(req.folder)
     if not folder_path.exists():
-        raise HTTPException(status_code=400, detail=f"Folder not found: {folder}")
+        raise HTTPException(status_code=400, detail=f"Folder not found: {req.folder}")
     image_paths: List[Path] = []
     for ext in ("*.jpg", "*.jpeg", "*.png", "*.webp", "*.bmp", "*.gif"):
         image_paths.extend(sorted(folder_path.glob(ext)))
@@ -122,7 +123,7 @@ def search(query: str, top_k: int = 1, db: Session = Depends(get_db)):
     return SearchResponse(query=query, results=results)
 
 
-@router.get("/", response_model=List[ImageResponse])
+@router.get("", response_model=List[ImageResponse])
 def get_images(db: Session = Depends(get_db)):
     """Get a list of all indexed images."""
     items = db.query(Image).all()

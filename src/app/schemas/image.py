@@ -8,6 +8,12 @@ from typing import List
 from pydantic import BaseModel
 
 
+class ImageIngestionRequest(BaseModel):
+    """Request model for ingesting images from a folder."""
+
+    folder: str
+
+
 class ImageResponse(BaseModel):
     """Response model for image data."""
 
